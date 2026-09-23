@@ -7,5 +7,7 @@
 ## Задание 3
 
 <img width="637" height="151" alt="Снимок экрана — 2026-09-23 в 13 05 44" src="https://github.com/user-attachments/assets/b5b0280c-991c-41fa-b851-63ccc3657927" />
+<img width="393" height="46" alt="Снимок экрана — 2026-09-23 в 13 08 17" src="https://github.com/user-attachments/assets/9906d568-a968-48ae-ac75-fb85abf22e72" />
+
 
 ## Задание 4
