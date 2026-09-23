@@ -6,6 +6,7 @@
 
 ## Задание 3
 
-<img width="408" height="142" alt="image" src="https://github.com/user-attachments/assets/d4d67e0e-0397-40f7-a921-6da58ca4d7f5" />
+<img width="698" height="143" alt="image" src="https://github.com/user-attachments/assets/149127f3-103c-4f73-a6b1-25f6e136ce91" />
+
 
 ## Задание 4
