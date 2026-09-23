@@ -6,6 +6,6 @@
 
 ## Задание 3
 
-<img width="637" height="151" alt="Снимок экрана — 2026-09-23 в 13 05 44" src="https://github.com/user-attachments/assets/3ff4ecd0-16c6-4ece-9c07-562428f7e6d5" />
+<img width="637" height="151" alt="Снимок экрана — 2026-09-23 в 13 05 44" src="https://github.com/user-attachments/assets/b5b0280c-991c-41fa-b851-63ccc3657927" />
 
 ## Задание 4
