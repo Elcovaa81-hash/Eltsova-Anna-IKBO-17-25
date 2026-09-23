@@ -8,5 +8,4 @@
 
 <img width="698" height="143" alt="image" src="https://github.com/user-attachments/assets/149127f3-103c-4f73-a6b1-25f6e136ce91" />
 
-
 ## Задание 4
