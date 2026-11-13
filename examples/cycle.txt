@@ -1,0 +1,6 @@
+# Cycle B -> C -> D -> B, plus a self dependency on E
+A: B
+B: C
+C: D
+D: B E
+E: E

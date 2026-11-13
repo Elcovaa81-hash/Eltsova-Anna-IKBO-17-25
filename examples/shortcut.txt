@@ -1,0 +1,8 @@
+# D is reachable at depth 3 via B-C and at depth 1 directly:
+# the shortest distance must win when the depth limit is applied
+A: B D
+B: C
+C: D
+D: E
+E: F
+F:

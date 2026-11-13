@@ -77,7 +77,7 @@ class ErrorsTest(unittest.TestCase):
             code, _, _ = run(["-p", "A", "-r", handle.name, "-m", "test"])
         finally:
             os.unlink(handle.name)
-        self.assertEqual(code, cli.EXIT_ERROR)
+        self.assertEqual(code, cli.EXIT_OK)
 
 
 if __name__ == "__main__":

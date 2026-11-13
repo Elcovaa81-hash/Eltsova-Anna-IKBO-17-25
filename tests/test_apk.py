@@ -79,11 +79,12 @@ class CliTest(unittest.TestCase):
             code = cli.main(["-p", package, "-r", url])
         return code, out.getvalue()
 
-    def test_prints_direct_dependencies(self):
+    def test_prints_transitive_graph(self):
         code, out = self.run_cli("curl")
         self.assertEqual(code, cli.EXIT_OK)
-        self.assertIn("Direct dependencies of curl (3):", out)
-        self.assertIn("  zlib", out)
+        self.assertIn("  curl -> zlib", out)
+        self.assertIn("  zlib -> musl", out)
+        self.assertIn("Packages (4):", out)
 
     def test_unknown_package(self):
         code, _ = self.run_cli("nothing")

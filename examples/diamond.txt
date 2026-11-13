@@ -1,0 +1,6 @@
+# Diamond: two paths from A to D
+A: B C
+B: D
+C: D
+D: E
+E:

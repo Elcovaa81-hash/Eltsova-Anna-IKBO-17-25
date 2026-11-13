@@ -1,0 +1,5 @@
+# Multi-letter names for the substring filter (try -f AB)
+APP: ABLIB CORE
+ABLIB: CORE
+CORE: BASE
+BASE:

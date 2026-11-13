@@ -19,3 +19,14 @@ run -p curl -r "$URL"
 run -p busybox -r "$URL"
 run -p no-such-package-xyz -r "$URL"
 run -p curl -r http://127.0.0.1:9/unreachable
+
+echo "=== Stage 3: DFS, depth limit, filter, cycles (test repository) ==="
+T="-m test"
+run $T -r examples/chain.txt -p A
+run $T -r examples/chain.txt -p A -d 2
+run $T -r examples/chain.txt -p A -d 0
+run $T -r examples/diamond.txt -p A
+run $T -r examples/cycle.txt -p A -d 10
+run $T -r examples/shortcut.txt -p A -d 3
+run $T -r examples/prefixed.txt -p APP -f AB
+run $T -r examples/chain.txt -p Z

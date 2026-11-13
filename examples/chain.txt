@@ -1,0 +1,5 @@
+# Simple chain: A depends on B, B on C, C on D
+A: B
+B: C
+C: D
+D:

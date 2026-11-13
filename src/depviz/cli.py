@@ -7,7 +7,8 @@ import sys
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from depviz import apk
+from depviz import apk, testrepo
+from depviz.graph import traverse
 
 REPO_MODES = ("remote", "test")
 DEFAULT_DEPTH = 3
@@ -101,22 +102,25 @@ def parse_config(argv=None):
     return config
 
 
-def print_direct_dependencies(graph, package):
-    """Print the direct dependencies of a package."""
-    deps = graph[package]
-    print(f"Direct dependencies of {package} ({len(deps)}):")
-    for dep in deps:
-        print(f"  {dep}")
+def print_graph(graph, package, max_depth):
+    """Print the dependency graph as a list of edges and nodes."""
+    print(f"Dependency graph of {package} (max depth {max_depth}):")
+    for source, target in graph.edges:
+        print(f"  {source} -> {target}")
+    print(f"Packages ({len(graph.depths)}):")
+    for name, depth in graph.depths.items():
+        print(f"  {name} (depth {depth})")
 
 
 def load_graph(config):
-    """Load the dependency graph described by the configuration."""
+    """Load the adjacency dict described by the configuration."""
     if config.repo_mode == "test":
-        raise apk.RepoError("test repository mode is not supported yet")
-    graph = apk.load_graph(config.repo)
-    if config.package not in graph:
+        adjacency = testrepo.load_graph(config.repo)
+    else:
+        adjacency = apk.load_graph(config.repo)
+    if config.package not in adjacency:
         raise apk.RepoError(f"package not found: {config.package}")
-    return graph
+    return adjacency
 
 
 def main(argv=None):
@@ -127,9 +131,11 @@ def main(argv=None):
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE
     try:
-        graph = load_graph(config)
+        adjacency = load_graph(config)
     except apk.RepoError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_ERROR
-    print_direct_dependencies(graph, config.package)
+    graph = traverse(adjacency, config.package, config.max_depth,
+                     config.name_filter)
+    print_graph(graph, config.package, config.max_depth)
     return EXIT_OK
