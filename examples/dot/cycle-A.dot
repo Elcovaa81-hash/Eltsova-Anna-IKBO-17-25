@@ -1,0 +1,15 @@
+digraph "A" {
+  rankdir=LR;
+  node [shape=box, fontname="Helvetica"];
+  "A" [style=filled, fillcolor="#ffe08a"];
+  "B";
+  "C";
+  "D";
+  "E";
+  "A" -> "B";
+  "B" -> "C";
+  "C" -> "D";
+  "D" -> "B";
+  "D" -> "E";
+  "E" -> "E";
+}

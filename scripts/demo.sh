@@ -38,3 +38,13 @@ run $T -r examples/diamond.txt -p D --reverse
 run $T -r examples/diamond.txt -p D --reverse -f B
 run $T -r examples/cycle.txt -p B --reverse -d 10
 run $T -r examples/chain.txt -p A --reverse
+
+echo "=== Stage 5: Graphviz DOT and images (needs Graphviz 'dot') ==="
+mkdir -p build
+run $T -r examples/diamond.txt -p A --dot - 
+run $T -r examples/diamond.txt -p A -o build/diamond-A.svg
+run $T -r examples/cycle.txt -p A -d 10 -o build/cycle-A.png
+run $T -r examples/diamond.txt -p D --reverse -o build/diamond-D-reverse.svg
+run $T -r examples/chain.txt -p A -o build/bad.bmp
+# Add --show to open the image in a viewer, e.g.:
+#   python3 -m depviz -m test -r examples/cycle.txt -p A --show

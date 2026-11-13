@@ -7,7 +7,8 @@ import sys
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from depviz import apk, testrepo
+from depviz import apk, render, testrepo
+from depviz.dot import to_dot
 from depviz.graph import reverse_adjacency, traverse
 
 REPO_MODES = ("remote", "test")
@@ -34,6 +35,9 @@ class Config:
     max_depth: int
     name_filter: str
     reverse: bool = False
+    dot: str = ""
+    output: str = ""
+    show: bool = False
 
 
 def non_negative_int(text):
@@ -69,6 +73,14 @@ def build_parser():
     parser.add_argument("--reverse", action="store_true",
                         help="show reverse dependencies (packages that "
                              "depend on the given package)")
+    parser.add_argument("--dot", metavar="FILE", default="",
+                        help="write the Graphviz DOT text to FILE "
+                             "('-' prints it to stdout)")
+    parser.add_argument("-o", "--output", metavar="IMAGE", default="",
+                        help="render an image (png, svg or pdf) with "
+                             "Graphviz")
+    parser.add_argument("--show", action="store_true",
+                        help="open the rendered image in a viewer")
     return parser
 
 
@@ -95,13 +107,19 @@ def validate(config):
     if config.name_filter and config.name_filter in config.package:
         raise ConfigError("the analyzed package matches the filter "
                           f"{config.name_filter!r}")
+    if config.output:
+        try:
+            render.image_format(config.output)
+        except render.RenderError as exc:
+            raise ConfigError(str(exc))
 
 
 def parse_config(argv=None):
     """Parse and validate command line options into a Config."""
     args = build_parser().parse_args(argv)
     config = Config(args.package, args.repo, args.repo_mode,
-                    args.max_depth, args.name_filter, args.reverse)
+                    args.max_depth, args.name_filter, args.reverse,
+                    args.dot, args.output, args.show)
     validate(config)
     return config
 
@@ -136,6 +154,43 @@ def load_graph(config):
     return adjacency
 
 
+def build_graph(config):
+    """Load the repository and traverse it, returning a DepGraph."""
+    adjacency = load_graph(config)
+    if config.reverse:
+        adjacency = reverse_adjacency(adjacency)
+    return traverse(adjacency, config.package, config.max_depth,
+                    config.name_filter)
+
+
+def write_dot(text, path):
+    """Write DOT text to a file, or to stdout when path is '-'."""
+    if path == "-":
+        print(text, end="")
+        return
+    try:
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(text)
+    except OSError as exc:
+        raise render.RenderError(f"cannot write {path}: {exc}")
+
+
+def visualize(graph, config):
+    """Produce the DOT file, image and preview requested by the user."""
+    edges = oriented_edges(graph, config.reverse)
+    text = to_dot(graph, edges, config.package)
+    if config.dot:
+        write_dot(text, config.dot)
+    image = config.output
+    if config.show and not image:
+        image = render.temp_image_path()
+    if image:
+        render.render_image(text, image)
+        print(f"image written to {image}")
+    if config.show:
+        render.show_image(image)
+
+
 def main(argv=None):
     """Run the tool, returning a process exit code."""
     try:
@@ -144,13 +199,11 @@ def main(argv=None):
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE
     try:
-        adjacency = load_graph(config)
-    except apk.RepoError as exc:
+        graph = build_graph(config)
+        if config.dot != "-":
+            print_graph(graph, config)
+        visualize(graph, config)
+    except (apk.RepoError, render.RenderError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_ERROR
-    if config.reverse:
-        adjacency = reverse_adjacency(adjacency)
-    graph = traverse(adjacency, config.package, config.max_depth,
-                     config.name_filter)
-    print_graph(graph, config)
     return EXIT_OK

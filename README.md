@@ -92,3 +92,80 @@ Packages (4):
   A (depth 2)
   C (depth 1)
 ```
+
+### Визуализация (этап 5)
+
+| Опция | Описание |
+|-------|----------|
+| `--dot FILE` | записать граф на языке Graphviz DOT в файл (`-` — в stdout, текстовый вывод при этом отключается) |
+| `-o`, `--output IMAGE` | построить изображение (`png`, `svg`, `pdf`) программой Graphviz `dot` |
+| `--show` | открыть изображение в просмотрщике (без `-o` создаётся временный png) |
+
+Корневой пакет подсвечивается, рёбра всегда идут «зависящий -> зависимость»
+(в режиме `--reverse` тоже). Для изображений нужен установленный Graphviz
+(`apt install graphviz`, `brew install graphviz`); без него выводится
+`error: Graphviz 'dot' is not installed`, а `--dot` работает всегда.
+
+## Сборка проекта и запуск тестов
+
+Сборка не требуется: нужен только Python 3.10+ (внешних зависимостей нет).
+
+```
+make test      # запуск unit-тестов (python -m unittest)
+make lint      # проверка стиля: длина строк/функций, число аргументов, docstring
+make demo      # демонстрация всех этапов (scripts/demo.sh)
+```
+
+Запуск без make: `PYTHONPATH=src python3 -m depviz --help`.
+
+## Примеры использования
+
+```
+# параметры/ошибки (этап 1)
+python -m depviz -p curl -r ftp://x                    # error: ... http(s) URL
+
+# реальный репозиторий Alpine (этапы 2-3)
+URL=https://dl-cdn.alpinelinux.org/alpine/v3.20/main/x86_64
+python -m depviz -p curl -r $URL -d 2
+python -m depviz -p curl -r $URL -d 3 -f lib           # без пакетов с "lib"
+python -m depviz -p musl -r $URL --reverse -d 1        # кто зависит от musl
+
+# тестовый репозиторий (этапы 3-4)
+python -m depviz -m test -r examples/cycle.txt -p A -d 10
+python -m depviz -m test -r examples/diamond.txt -p D --reverse
+
+# визуализация (этап 5)
+python -m depviz -m test -r examples/cycle.txt -p A -d 10 -o cycle.png --show
+python -m depviz -p curl -r $URL --dot curl.dot -o curl.svg
+```
+
+Готовые DOT-файлы для трёх случаев лежат в `examples/dot/`:
+`diamond-A.dot` (ромб), `cycle-A.dot` (цикл и самозависимость),
+`diamond-D-reverse.dot` (обратные зависимости). Изображение:
+`dot -Tpng examples/dot/cycle-A.dot -o cycle.png` (картинки в репозиторий
+не коммитятся, см. `.gitignore`).
+
+## Сравнение со штатным инструментом apk
+
+Штатный аналог — `apk dot` (генерирует граф в формате Graphviz). Чтобы
+сравнить результаты, на Alpine (контейнер `docker run -it alpine:3.20 sh`)
+выполните для тех же пакетов:
+
+```
+apk dot curl > apk-curl.dot
+python -m depviz -p curl -r $URL -d 10 --dot depviz-curl.dot
+```
+
+Ожидаемые причины расхождений (проверяйте по реальному выводу):
+
+* `apk dot` работает через решатель зависимостей apk и учитывает
+  установленные пакеты и выбранные репозитории, а `depviz` просто идёт по
+  полю `D` одного индекса;
+* виртуальные зависимости (`so:`, `cmd:`, `pc:`) `depviz` заменяет
+  пакетом-поставщиком (первым найденным в индексе), `apk` может выбрать
+  другого поставщика или показать их отдельными узлами;
+* `depviz` отбрасывает ограничения версий, конфликты (`!pkg`) и имена,
+  которых нет в индексе одного репозитория (например, пакеты из
+  `community` при указании только `main`);
+* `depviz` ограничивает глубину `--max-depth` и фильтрует по подстроке,
+  у `apk dot` таких настроек нет.
