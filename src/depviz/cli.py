@@ -7,6 +7,8 @@ import sys
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
+from depviz import apk
+
 REPO_MODES = ("remote", "test")
 DEFAULT_DEPTH = 3
 MIN_DEPTH = 0
@@ -99,13 +101,22 @@ def parse_config(argv=None):
     return config
 
 
-def print_params(config):
-    """Print all user configurable parameters as key: value."""
-    print(f"package: {config.package}")
-    print(f"repo: {config.repo}")
-    print(f"repo_mode: {config.repo_mode}")
-    print(f"max_depth: {config.max_depth}")
-    print(f"filter: {config.name_filter}")
+def print_direct_dependencies(graph, package):
+    """Print the direct dependencies of a package."""
+    deps = graph[package]
+    print(f"Direct dependencies of {package} ({len(deps)}):")
+    for dep in deps:
+        print(f"  {dep}")
+
+
+def load_graph(config):
+    """Load the dependency graph described by the configuration."""
+    if config.repo_mode == "test":
+        raise apk.RepoError("test repository mode is not supported yet")
+    graph = apk.load_graph(config.repo)
+    if config.package not in graph:
+        raise apk.RepoError(f"package not found: {config.package}")
+    return graph
 
 
 def main(argv=None):
@@ -115,5 +126,10 @@ def main(argv=None):
     except ConfigError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE
-    print_params(config)
+    try:
+        graph = load_graph(config)
+    except apk.RepoError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+    print_direct_dependencies(graph, config.package)
     return EXIT_OK

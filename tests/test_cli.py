@@ -25,17 +25,10 @@ def run(argv):
 class ParamsTest(unittest.TestCase):
     """Valid invocations."""
 
-    def test_prints_all_params(self):
-        code, out, _ = run(["-p", "curl", "-r", URL, "-d", "2", "-f", "lib"])
-        self.assertEqual(code, cli.EXIT_OK)
-        for line in ("package: curl", f"repo: {URL}", "repo_mode: remote",
-                     "max_depth: 2", "filter: lib"):
-            self.assertIn(line, out)
-
-    def test_defaults(self):
-        _, out, _ = run(["-p", "curl", "-r", URL])
-        self.assertIn(f"max_depth: {cli.DEFAULT_DEPTH}", out)
-        self.assertIn("filter: \n", out)
+    def test_unreachable_repo_is_reported(self):
+        code, _, err = run(["-p", "curl", "-r", "http://127.0.0.1:9/x"])
+        self.assertEqual(code, cli.EXIT_ERROR)
+        self.assertIn("cannot download", err)
 
 
 class ErrorsTest(unittest.TestCase):
@@ -84,7 +77,7 @@ class ErrorsTest(unittest.TestCase):
             code, _, _ = run(["-p", "A", "-r", handle.name, "-m", "test"])
         finally:
             os.unlink(handle.name)
-        self.assertEqual(code, cli.EXIT_OK)
+        self.assertEqual(code, cli.EXIT_ERROR)
 
 
 if __name__ == "__main__":

@@ -13,3 +13,9 @@ run -p A -r "$URL" -m fake
 run -p A -r "$URL" -d -5
 run -p A -r "$URL" -d abc
 run -p libfoo -r "$URL" -f lib
+
+echo "=== Stage 2: direct dependencies from a real apk repository ==="
+run -p curl -r "$URL"
+run -p busybox -r "$URL"
+run -p no-such-package-xyz -r "$URL"
+run -p curl -r http://127.0.0.1:9/unreachable
