@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Build and generated artifacts
+build/
+dist/
+out/
+*.svg
+*.png
+*.pdf
+
+# Editors
+.idea/
+.vscode/
+*.swp
