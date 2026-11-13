@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 
 from depviz import apk, testrepo
-from depviz.graph import traverse
+from depviz.graph import reverse_adjacency, traverse
 
 REPO_MODES = ("remote", "test")
 DEFAULT_DEPTH = 3
@@ -33,6 +33,7 @@ class Config:
     repo_mode: str
     max_depth: int
     name_filter: str
+    reverse: bool = False
 
 
 def non_negative_int(text):
@@ -65,6 +66,9 @@ def build_parser():
                         help="maximum dependency depth (default: 3)")
     parser.add_argument("-f", "--filter", default="", dest="name_filter",
                         help="skip packages whose name contains this text")
+    parser.add_argument("--reverse", action="store_true",
+                        help="show reverse dependencies (packages that "
+                             "depend on the given package)")
     return parser
 
 
@@ -97,19 +101,28 @@ def parse_config(argv=None):
     """Parse and validate command line options into a Config."""
     args = build_parser().parse_args(argv)
     config = Config(args.package, args.repo, args.repo_mode,
-                    args.max_depth, args.name_filter)
+                    args.max_depth, args.name_filter, args.reverse)
     validate(config)
     return config
 
 
-def print_graph(graph, package, max_depth):
+def print_graph(graph, config):
     """Print the dependency graph as a list of edges and nodes."""
-    print(f"Dependency graph of {package} (max depth {max_depth}):")
-    for source, target in graph.edges:
+    kind = "Reverse dependency" if config.reverse else "Dependency"
+    print(f"{kind} graph of {config.package} "
+          f"(max depth {config.max_depth}):")
+    for source, target in oriented_edges(graph, config.reverse):
         print(f"  {source} -> {target}")
     print(f"Packages ({len(graph.depths)}):")
     for name, depth in graph.depths.items():
         print(f"  {name} (depth {depth})")
+
+
+def oriented_edges(graph, reverse):
+    """Return edges as "dependent -> dependency" pairs."""
+    if reverse:
+        return [(target, source) for source, target in graph.edges]
+    return graph.edges
 
 
 def load_graph(config):
@@ -135,7 +148,9 @@ def main(argv=None):
     except apk.RepoError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_ERROR
+    if config.reverse:
+        adjacency = reverse_adjacency(adjacency)
     graph = traverse(adjacency, config.package, config.max_depth,
                      config.name_filter)
-    print_graph(graph, config.package, config.max_depth)
+    print_graph(graph, config)
     return EXIT_OK

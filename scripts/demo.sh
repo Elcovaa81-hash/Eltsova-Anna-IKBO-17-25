@@ -30,3 +30,11 @@ run $T -r examples/cycle.txt -p A -d 10
 run $T -r examples/shortcut.txt -p A -d 3
 run $T -r examples/prefixed.txt -p APP -f AB
 run $T -r examples/chain.txt -p Z
+
+echo "=== Stage 4: reverse dependencies (test repository) ==="
+run $T -r examples/chain.txt -p D --reverse
+run $T -r examples/chain.txt -p D --reverse -d 1
+run $T -r examples/diamond.txt -p D --reverse
+run $T -r examples/diamond.txt -p D --reverse -f B
+run $T -r examples/cycle.txt -p B --reverse -d 10
+run $T -r examples/chain.txt -p A --reverse

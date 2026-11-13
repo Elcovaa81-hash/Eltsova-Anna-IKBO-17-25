@@ -121,6 +121,34 @@ class CliTest(unittest.TestCase):
         code, _ = self.run_cli("chain.txt", "-p", "Z")
         self.assertEqual(code, cli.EXIT_ERROR)
 
+    def test_reverse_chain(self):
+        code, out = self.run_cli("chain.txt", "-p", "D", "--reverse")
+        self.assertEqual(code, cli.EXIT_OK)
+        self.assertIn("Reverse dependency graph of D", out)
+        self.assertIn("  C -> D", out)
+        self.assertIn("  A -> B", out)
+        self.assertIn("Packages (4):", out)
+
+    def test_reverse_depth_limit(self):
+        _, out = self.run_cli("chain.txt", "-p", "D", "--reverse", "-d", "1")
+        self.assertIn("Packages (2):", out)
+        self.assertNotIn("B -> C", out)
+
+    def test_reverse_cycle(self):
+        code, out = self.run_cli("cycle.txt", "-p", "B", "--reverse",
+                                 "-d", "9")
+        self.assertEqual(code, cli.EXIT_OK)
+        self.assertIn("Packages (4):", out)
+
+    def test_reverse_filter(self):
+        _, out = self.run_cli("diamond.txt", "-p", "D", "--reverse",
+                              "-f", "B")
+        self.assertNotIn("B", out.replace("Reverse", ""))
+
+    def test_reverse_of_unreferenced_package(self):
+        _, out = self.run_cli("chain.txt", "-p", "A", "--reverse")
+        self.assertIn("Packages (1):", out)
+
 
 if __name__ == "__main__":
     unittest.main()

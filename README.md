@@ -69,3 +69,26 @@ C:
 Имена пакетов — заглавные латинские буквы. Пакет, упомянутый только как
 зависимость, считается листом. Примеры лежат в каталоге `examples/`
 (`chain`, `diamond`, `cycle`, `shortcut`, `prefixed`).
+
+### Обратные зависимости (этап 4)
+
+Опция `--reverse` выводит пакеты, которые зависят от заданного (прямо или
+транзитивно). Используется тот же итеративный DFS, но по графу с
+перевёрнутыми рёбрами (`graph.reverse_adjacency`), поэтому `--max-depth`,
+`--filter` и обработка циклов работают так же. Рёбра печатаются в
+исходном направлении «зависящий -> зависимость».
+
+```
+$ python -m depviz -m test -r examples/diamond.txt -p D --reverse
+Reverse dependency graph of D (max depth 3):
+  B -> D
+  C -> D
+  A -> B
+  A -> C
+Packages (4):
+  D (depth 0)
+  B (depth 1)
+  C (depth 1)
+  A (depth 2)
+  C (depth 1)
+```
