@@ -42,10 +42,24 @@ def download(url):
 
 
 def extract_index(archive):
-    """Return the text of the APKINDEX file inside the archive bytes."""
+    """Return the text of the APKINDEX file inside the archive bytes.
+
+    The archive consists of several gzip segments (signature and index).
+    The signature segment may end with padding blocks, so the archive is
+    opened with ``ignore_zeros=True`` to keep reading past them.
+
+    Args:
+        archive: contents of ``APKINDEX.tar.gz`` as bytes.
+
+    Returns:
+        The decoded text of the ``APKINDEX`` file.
+
+    Raises:
+        RepoError: if the archive is damaged or has no regular
+            ``APKINDEX`` file.
+    """
     try:
         stream = io.BytesIO(archive)
-        # ignore_zeros: the signature segment may end with padding blocks
         with tarfile.open(fileobj=stream, mode="r:gz",
                           ignore_zeros=True) as tar:
             member = tar.extractfile(INDEX_NAME)
